@@ -8,7 +8,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-// RunMainMenu launches the main menu with arrow navigation and green theme
 func RunMainMenu() error {
 	app := tview.NewApplication()
 
