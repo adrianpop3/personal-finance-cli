@@ -10,7 +10,6 @@ import (
 
 var database *sql.DB
 
-// InitDB opens/creates the local sqlite DB and ensures schema exists.
 func InitDB() error {
 	var err error
 	if database != nil {
@@ -21,7 +20,6 @@ func InitDB() error {
 		return err
 	}
 
-	// Set reasonable pragmas for WAL and performance (optional)
 	_, _ = database.Exec("PRAGMA journal_mode = WAL;")
 	_, _ = database.Exec("PRAGMA foreign_keys = ON;")
 
@@ -84,7 +82,6 @@ func GetTransactions() ([]Transaction, error) {
 		}
 		t.Date, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			// fallback to zero time if parsing fails
 			t.Date = time.Time{}
 		}
 		txs = append(txs, t)
@@ -131,7 +128,7 @@ type Budget struct {
 	ID       int
 	Category string
 	Amount   float64
-	Period   string // e.g. "2025-11" or "monthly"
+	Period   string
 }
 
 func InsertBudget(b Budget) error {
@@ -187,9 +184,6 @@ func DeleteBudget(id int) error {
 	return err
 }
 
-// GetBudgetRemaining computes remaining amount for a budget dynamically (Option B).
-// It considers only negative transaction amounts (expenses) for the same category and period.
-// If budget.Period == "monthly" it's treated as the current month (YYYY-MM).
 func GetBudgetRemaining(b Budget) (float64, error) {
 	if database == nil {
 		return 0, fmt.Errorf("database not initialized")
@@ -200,8 +194,6 @@ func GetBudgetRemaining(b Budget) (float64, error) {
 		period = time.Now().Format("2006-01")
 	}
 
-	// Sum only expenses (negative amounts) for the same category and period.
-	// transactions.date is stored as YYYY-MM-DD
 	query := `
 	SELECT COALESCE(SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END), 0) 
 	FROM transactions 

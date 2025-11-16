@@ -13,7 +13,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-// RunTUI shows the Transactions menu
 func RunTUI() {
 	app := tview.NewApplication()
 
@@ -262,7 +261,6 @@ func ImportInteractive() {
 				fmt.Println("No path provided")
 				return
 			}
-			// Attempt to open file
 			f, err := os.Open(path)
 			if err != nil {
 				fmt.Println("Failed to open file:", err)
@@ -280,17 +278,13 @@ func ImportInteractive() {
 				return
 			}
 
-			// Insert transactions
 			if err := parser.InsertParsedTransactions(parsed); err != nil {
 				fmt.Println("Error inserting transactions:", err)
 				return
 			}
 
-			// Compute affected budgets summary
-			// Collect unique categories from parsed (only expenses matter)
 			catSet := map[string]struct{}{}
 			for _, p := range parsed {
-				// only expenses reduce budgets (negative amounts)
 				if p.Amount < 0 {
 					catSet[p.Category] = struct{}{}
 				}
@@ -298,7 +292,6 @@ func ImportInteractive() {
 
 			var summaryLines []string
 			for cat := range catSet {
-				// find budgets for this category
 				budgets, err := db.GetBudgets()
 				if err != nil {
 					continue
@@ -315,7 +308,6 @@ func ImportInteractive() {
 				}
 			}
 
-			// Show summary modal
 			msg := fmt.Sprintf("Imported %d transactions\n", len(parsed))
 			if len(summaryLines) > 0 {
 				msg += "Updated budgets:\n"
@@ -326,7 +318,6 @@ func ImportInteractive() {
 				msg += "No matching budgets were affected."
 			}
 
-			// Use a modal to show the summary
 			m := tview.NewModal().
 				SetText("[green]" + msg + "[::-]").
 				AddButtons([]string{"OK"}).

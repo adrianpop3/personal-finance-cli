@@ -242,13 +242,13 @@ type rule struct {
 }
 
 var defaultRules = []rule{
-	{regexp.MustCompile(`\b(supermarket|grocery|groceries|aldi|lidl|tesco|spar)\b`), "Food"},
+	{regexp.MustCompile(`\b(supermarket|grocery|groceries|aldi|lidl|tesco|kaufland|spar)\b`), "Food"},
 	{regexp.MustCompile(`\b(coffee|cafe|starbucks|espresso)\b`), "Coffee"},
-	{regexp.MustCompile(`\b(salary|payroll|pay)\b`), "Income"},
+	{regexp.MustCompile(`\b(salary|payroll|pay|donation)\b`), "Income"},
 	{regexp.MustCompile(`\b(electricity|water bill|gas bill|utility|utilities)\b`), "Utilities"},
 	{regexp.MustCompile(`\b(rent|landlord)\b`), "Rent"},
 	{regexp.MustCompile(`\b(uber|taxi|lyft|cab|transport)\b`), "Transport"},
-	{regexp.MustCompile(`\b(restaurant|dinner|lunch|breakfast|bar)\b`), "Dining"},
+	{regexp.MustCompile(`\b(restaurant|dinner|lunch|breakfast|bar|date)\b`), "Dining"},
 	{regexp.MustCompile(`\b(insurance)\b`), "Insurance"},
 }
 
