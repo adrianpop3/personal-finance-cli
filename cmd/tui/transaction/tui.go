@@ -2,7 +2,10 @@ package transaction
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"personal-finance-cli/db"
+	"personal-finance-cli/internal/parser"
 	"strconv"
 	"time"
 
@@ -10,6 +13,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// RunTUI shows the Transactions menu
 func RunTUI() {
 	app := tview.NewApplication()
 
@@ -18,10 +22,11 @@ func RunTUI() {
 		SetText("[::b][green]💰 Transactions Menu[::-]").
 		SetDynamicColors(true)
 
-	labels := []string{"List Transactions", "Add Transaction", "Back"}
+	labels := []string{"List Transactions", "Add Transaction", "Import From File", "Back"}
 	actions := []func(){
 		func() { app.Suspend(showTransactions) },
 		func() { app.Suspend(AddInteractive) },
+		func() { app.Suspend(ImportInteractive) },
 		func() { app.Stop() },
 	}
 
@@ -241,5 +246,97 @@ func UpdateInteractive(tx db.Transaction) {
 		AddButton("Cancel", func() { app.Stop() })
 
 	form.SetBorder(true).SetTitle(fmt.Sprintf("[green]Edit Transaction ID %d", tx.ID)).SetTitleAlign(tview.AlignLeft)
+	app.SetRoot(form, true).EnableMouse(true).Run()
+}
+
+// ------------------ Import From File flow -------------------
+
+func ImportInteractive() {
+	app := tview.NewApplication()
+	var form *tview.Form
+	form = tview.NewForm().
+		AddInputField("File path", "", 60, nil, nil).
+		AddButton("Import", func() {
+			path := form.GetFormItemByLabel("File path").(*tview.InputField).GetText()
+			if path == "" {
+				fmt.Println("No path provided")
+				return
+			}
+			// Attempt to open file
+			f, err := os.Open(path)
+			if err != nil {
+				fmt.Println("Failed to open file:", err)
+				return
+			}
+			defer f.Close()
+
+			parsed, err := parser.DetectAndParse(f, filepath.Base(path))
+			if err != nil {
+				fmt.Println("Parse error:", err)
+				return
+			}
+			if len(parsed) == 0 {
+				fmt.Println("No transactions parsed")
+				return
+			}
+
+			// Insert transactions
+			if err := parser.InsertParsedTransactions(parsed); err != nil {
+				fmt.Println("Error inserting transactions:", err)
+				return
+			}
+
+			// Compute affected budgets summary
+			// Collect unique categories from parsed (only expenses matter)
+			catSet := map[string]struct{}{}
+			for _, p := range parsed {
+				// only expenses reduce budgets (negative amounts)
+				if p.Amount < 0 {
+					catSet[p.Category] = struct{}{}
+				}
+			}
+
+			var summaryLines []string
+			for cat := range catSet {
+				// find budgets for this category
+				budgets, err := db.GetBudgets()
+				if err != nil {
+					continue
+				}
+				for _, b := range budgets {
+					if b.Category != cat {
+						continue
+					}
+					rem, err := db.GetBudgetRemaining(b)
+					if err != nil {
+						continue
+					}
+					summaryLines = append(summaryLines, fmt.Sprintf("- %s (%s): remaining %.2f (limit %.2f)", b.Category, b.Period, rem, b.Amount))
+				}
+			}
+
+			// Show summary modal
+			msg := fmt.Sprintf("Imported %d transactions\n", len(parsed))
+			if len(summaryLines) > 0 {
+				msg += "Updated budgets:\n"
+				for _, l := range summaryLines {
+					msg += l + "\n"
+				}
+			} else {
+				msg += "No matching budgets were affected."
+			}
+
+			// Use a modal to show the summary
+			m := tview.NewModal().
+				SetText("[green]" + msg + "[::-]").
+				AddButtons([]string{"OK"}).
+				SetDoneFunc(func(i int, lbl string) {
+					app.Stop()
+				})
+			app.SetRoot(m, false)
+		}).
+		AddButton("Cancel", func() { app.Stop() })
+
+	form.SetBorder(true).SetTitle("[green]Import Transactions from File").SetTitleAlign(tview.AlignLeft)
 	app.SetRoot(form, true).EnableMouse(true).Run()
 }
