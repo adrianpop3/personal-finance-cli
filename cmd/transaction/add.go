@@ -49,15 +49,12 @@ var AddCmd = &cobra.Command{
 }
 
 func init() {
-	// Define flags
 	AddCmd.Flags().Float64VarP(&addAmount, "amount", "a", 0, "Amount of transaction (required)")
 	AddCmd.Flags().StringVarP(&addDescription, "description", "d", "", "Description")
 	AddCmd.Flags().StringVarP(&addCategory, "category", "c", "Uncategorized", "Category")
 	AddCmd.Flags().StringVarP(&addDate, "date", "", "", "Date YYYY-MM-DD (optional; defaults to today)")
 
-	// Make amount required
 	_ = AddCmd.MarkFlagRequired("amount")
 
-	// Attach to parent TransactionCmd instead of root
 	TransactionCmd.AddCommand(AddCmd)
 }

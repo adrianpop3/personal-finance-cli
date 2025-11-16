@@ -28,7 +28,6 @@ func DetectAndParse(r io.Reader, filename string) ([]ParsedTransaction, error) {
 	case ".ofx", ".qfx":
 		return parseOFX(r)
 	default:
-		// try to sniff: read first few bytes
 		br := bufio.NewReader(r)
 		peek, _ := br.Peek(512)
 		s := strings.ToLower(string(peek))

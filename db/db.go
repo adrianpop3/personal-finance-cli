@@ -9,7 +9,6 @@ import (
 
 var database *sql.DB
 
-// InitDB opens/creates the local sqlite DB and ensures schema exists.
 func InitDB() error {
 	var err error
 	if database != nil {
@@ -20,7 +19,6 @@ func InitDB() error {
 		return err
 	}
 
-	// Set reasonable pragmas for WAL and performance (optional)
 	_, _ = database.Exec("PRAGMA journal_mode = WAL;")
 	_, _ = database.Exec("PRAGMA foreign_keys = ON;")
 
@@ -115,4 +113,64 @@ func GetTransactionByID(id int) (*Transaction, error) {
 
 	t.Date, _ = time.Parse("2006-01-02", dateStr)
 	return &t, nil
+}
+
+type Budget struct {
+	ID       int
+	Category string
+	Amount   float64
+	Period   string
+}
+
+func InsertBudget(b Budget) error {
+	_, err := database.Exec(
+		`INSERT INTO budgets (category, amount, period) VALUES (?, ?, ?)`,
+		b.Category, b.Amount, b.Period,
+	)
+	return err
+}
+
+func GetBudgets() ([]Budget, error) {
+	rows, err := database.Query(`SELECT id, category, amount, period FROM budgets ORDER BY period DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var budgets []Budget
+	for rows.Next() {
+		var b Budget
+		if err := rows.Scan(&b.ID, &b.Category, &b.Amount, &b.Period); err != nil {
+			return nil, err
+		}
+		budgets = append(budgets, b)
+	}
+	return budgets, nil
+}
+
+func GetBudgetByID(id int) (*Budget, error) {
+	row := database.QueryRow(`SELECT id, category, amount, period FROM budgets WHERE id = ?`, id)
+
+	var b Budget
+	err := row.Scan(&b.ID, &b.Category, &b.Amount, &b.Period)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
+
+func UpdateBudget(b Budget) error {
+	_, err := database.Exec(
+		`UPDATE budgets SET category = ?, amount = ?, period = ? WHERE id = ?`,
+		b.Category, b.Amount, b.Period, b.ID,
+	)
+	return err
+}
+
+func DeleteBudget(id int) error {
+	_, err := database.Exec(`DELETE FROM budgets WHERE id = ?`, id)
+	return err
 }

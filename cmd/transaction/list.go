@@ -9,7 +9,6 @@ import (
 
 var listID int
 
-// ListCmd lists transactions; can filter by ID
 var ListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all transactions or a specific transaction by ID",
@@ -18,7 +17,6 @@ var ListCmd = &cobra.Command{
 		var err error
 
 		if listID > 0 {
-			// Fetch single transaction
 			tx, err := db.GetTransactionByID(listID)
 			if err != nil {
 				return err
@@ -29,7 +27,6 @@ var ListCmd = &cobra.Command{
 			}
 			txs = []db.Transaction{*tx}
 		} else {
-			// Fetch all transactions
 			txs, err = db.GetTransactions()
 			if err != nil {
 				return err
