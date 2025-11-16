@@ -10,51 +10,78 @@ import (
 	"github.com/rivo/tview"
 )
 
-// ------------------ MAIN TRANSACTION TUI -------------------
-
 func RunTUI() {
 	app := tview.NewApplication()
 
-	// Title
 	title := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetText("[::b][green]💰 Transactions Menu[::-]").
 		SetDynamicColors(true)
 
-	// Buttons
-	buttons := tview.NewFlex().SetDirection(tview.FlexRow)
-	buttons.AddItem(makeButton("List Transactions", func() {
-		app.Suspend(func() { showTransactions() })
-	}), 3, 0, true)
+	labels := []string{"List Transactions", "Add Transaction", "Back"}
+	actions := []func(){
+		func() { app.Suspend(showTransactions) },
+		func() { app.Suspend(AddInteractive) },
+		func() { app.Stop() },
+	}
 
-	buttons.AddItem(makeButton("Add Transaction", func() {
-		app.Suspend(func() { AddInteractive() })
-	}), 3, 0, false)
+	current := 0
+	buttonFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+	buttons := []*tview.Button{}
 
-	buttons.AddItem(makeButton("Back", func() {
-		app.Stop()
-	}), 3, 0, false)
+	for i, label := range labels {
+		idx := i
+		btn := tview.NewButton("[green]" + label).SetSelectedFunc(actions[idx])
+		btn.SetBorder(true)
+		buttons = append(buttons, btn)
+		buttonFlex.AddItem(btn, 3, 0, false)
+	}
 
-	// Layout
+	highlight := func() {
+		for i, btn := range buttons {
+			if i == current {
+				btn.SetLabel("[white][green]" + labels[i] + "[::-]")
+			} else {
+				btn.SetLabel("[green]" + labels[i] + "[::-]")
+			}
+		}
+	}
+
+	highlight()
+
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(title, 5, 1, false).
-		AddItem(buttons, 0, 2, true)
+		AddItem(buttonFlex, 0, 2, true)
+
+	layout.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyUp:
+			current--
+			if current < 0 {
+				current = len(buttons) - 1
+			}
+			highlight()
+			return nil
+		case tcell.KeyDown:
+			current++
+			if current >= len(buttons) {
+				current = 0
+			}
+			highlight()
+			return nil
+		case tcell.KeyEnter:
+			actions[current]()
+			return nil
+		}
+		return event
+	})
 
 	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
 		fmt.Println(err)
 	}
 }
 
-// ------------------ HELPER -------------------
-
-func makeButton(label string, selected func()) *tview.Button {
-	btn := tview.NewButton(fmt.Sprintf("[::b]%s", label)).
-		SetSelectedFunc(selected)
-	btn.SetBorder(true)
-	return btn
-}
-
-// ------------------ TRANSACTION TABLE -------------------
+// ------------------ Transaction Table -------------------
 
 func showTransactions() {
 	txs, err := db.GetTransactions()
@@ -65,11 +92,11 @@ func showTransactions() {
 
 	app := tview.NewApplication()
 	table := tview.NewTable().SetSelectable(true, false)
-	table.SetBorder(true).SetTitle("Transactions (Enter=Edit/Delete, ESC=Back)")
+	table.SetBorder(true).SetTitle("[green]Transactions (Enter=Edit/Delete, ESC=Back)").SetTitleAlign(tview.AlignCenter)
 
 	headers := []string{"ID", "Amount", "Category", "Date", "Description"}
 	for i, h := range headers {
-		table.SetCell(0, i, tview.NewTableCell(fmt.Sprintf("[::b]%s", h)).SetSelectable(false))
+		table.SetCell(0, i, tview.NewTableCell(fmt.Sprintf("[::b][green]%s[::-]", h)).SetSelectable(false))
 	}
 
 	for r, t := range txs {
@@ -80,7 +107,6 @@ func showTransactions() {
 		table.SetCell(r+1, 4, tview.NewTableCell(t.Description))
 	}
 
-	// Row selected → show modal dialog
 	table.SetSelectedFunc(func(row, column int) {
 		if row == 0 {
 			return
@@ -100,11 +126,11 @@ func showTransactions() {
 	}
 }
 
-// ------------------ TRANSACTION ACTIONS -------------------
+// ------------------ Transaction Modal -------------------
 
 func showTransactionActions(tx db.Transaction, parentTable *tview.Table, app *tview.Application) {
 	modal := tview.NewModal().
-		SetText(fmt.Sprintf("Transaction ID %d\nChoose an action", tx.ID)).
+		SetText(fmt.Sprintf("[green]Transaction ID %d\nChoose an action[::-]", tx.ID)).
 		AddButtons([]string{"Edit", "Delete", "Cancel"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			switch buttonLabel {
@@ -119,20 +145,18 @@ func showTransactionActions(tx db.Transaction, parentTable *tview.Table, app *tv
 					}
 				})
 			case "Cancel":
-				// do nothing
 			}
-			app.SetRoot(parentTable, true) // return to table
+			app.SetRoot(parentTable, true)
 		})
 
 	app.SetRoot(modal, false)
 }
 
-// ------------------ ADD TRANSACTION FORM -------------------
+// ------------------ Add / Update Forms -------------------
 
 func AddInteractive() {
 	app := tview.NewApplication()
-	var form *tview.Form // <-- declared before closure
-
+	var form *tview.Form
 	form = tview.NewForm().
 		AddInputField("Amount", "", 20, nil, nil).
 		AddInputField("Category", "Uncategorized", 20, nil, nil).
@@ -172,19 +196,13 @@ func AddInteractive() {
 		}).
 		AddButton("Cancel", func() { app.Stop() })
 
-	form.SetBorder(true).SetTitle("Add Transaction").SetTitleAlign(tview.AlignLeft)
-
-	if err := app.SetRoot(form, true).EnableMouse(true).Run(); err != nil {
-		fmt.Println(err)
-	}
+	form.SetBorder(true).SetTitle("[green]Add Transaction").SetTitleAlign(tview.AlignLeft)
+	app.SetRoot(form, true).EnableMouse(true).Run()
 }
-
-// ------------------ UPDATE TRANSACTION FORM -------------------
 
 func UpdateInteractive(tx db.Transaction) {
 	app := tview.NewApplication()
-	var form *tview.Form // <-- declared before closure
-
+	var form *tview.Form
 	form = tview.NewForm().
 		AddInputField("Amount", fmt.Sprintf("%.2f", tx.Amount), 20, nil, nil).
 		AddInputField("Category", tx.Category, 20, nil, nil).
@@ -222,9 +240,6 @@ func UpdateInteractive(tx db.Transaction) {
 		}).
 		AddButton("Cancel", func() { app.Stop() })
 
-	form.SetBorder(true).SetTitle(fmt.Sprintf("Edit Transaction ID %d", tx.ID)).SetTitleAlign(tview.AlignLeft)
-
-	if err := app.SetRoot(form, true).EnableMouse(true).Run(); err != nil {
-		fmt.Println(err)
-	}
+	form.SetBorder(true).SetTitle(fmt.Sprintf("[green]Edit Transaction ID %d", tx.ID)).SetTitleAlign(tview.AlignLeft)
+	app.SetRoot(form, true).EnableMouse(true).Run()
 }
