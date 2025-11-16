@@ -22,10 +22,11 @@ and updating the corresponding budgets.
 
 ### 1. Transactions & Budgets
 - Full CRUD operations:
-  - **Add Transaction**
-  - **Update Transaction**
-  - **Delete Transaction**
-  - **List Transactions** (All or by ID)
+  - **Add Transaction/Budgets**
+  - **Update Transaction/Budgets**
+  - **Delete Transaction/Budgets**
+  - **List Transactions/Budgets** (All or by ID)
+  - **Import Transactions From File (.csv)
 - Interactive TUI:
   - Arrow navigation
   - Green-themed buttons
