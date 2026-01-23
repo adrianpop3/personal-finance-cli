@@ -138,6 +138,68 @@ func GetTransactions() ([]Transaction, error) {
 	return txs, nil
 }
 
+func GetFilteredTransactions(category, desc string, from, to *time.Time, min, max *float64) ([]Transaction, error) {
+	if database == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	query := `SELECT id, amount, description, category, date FROM transactions WHERE 1=1`
+	args := []interface{}{}
+
+	if category != "" {
+		query += " AND category = ?"
+		args = append(args, category)
+	}
+
+	if desc != "" {
+		query += " AND description LIKE ?"
+		args = append(args, "%"+desc+"%")
+	}
+
+	if from != nil {
+		query += " AND date >= ?"
+		args = append(args, from.Format("2006-01-02"))
+	}
+
+	if to != nil {
+		query += " AND date <= ?"
+		args = append(args, to.Format("2006-01-02"))
+	}
+
+	if min != nil {
+		query += " AND amount >= ?"
+		args = append(args, *min)
+	}
+
+	if max != nil {
+		query += " AND amount <= ?"
+		args = append(args, *max)
+	}
+
+	query += " ORDER BY date DESC"
+
+	rows, err := database.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var txs []Transaction
+	for rows.Next() {
+		var t Transaction
+		var dateStr string
+		if err := rows.Scan(&t.ID, &t.Amount, &t.Description, &t.Category, &dateStr); err != nil {
+			return nil, err
+		}
+		t.Date, err = time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			t.Date = time.Time{}
+		}
+		txs = append(txs, t)
+	}
+	return txs, nil
+}
+
 func UpdateTransaction(t Transaction) error {
 	_, err := database.Exec(
 		`UPDATE transactions

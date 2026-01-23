@@ -9,3 +9,7 @@ var TransactionCmd = &cobra.Command{
 	Short: "Manage transactions",
 	Long:  "Create, list, update, and delete transactions in your personal finance manager.",
 }
+
+func init() {
+	TransactionCmd.AddCommand(ListCmd)
+}
