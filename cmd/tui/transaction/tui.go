@@ -7,6 +7,7 @@ import (
 	"personal-finance-cli/db"
 	"personal-finance-cli/internal/parser"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -163,7 +164,7 @@ func AddInteractive() {
 	var form *tview.Form
 	form = tview.NewForm().
 		AddInputField("Amount", "", 20, nil, nil).
-		AddInputField("Category", "Uncategorized", 20, nil, nil).
+		AddInputField("Category", "", 20, nil, nil).
 		AddInputField("Description", "", 50, nil, nil).
 		AddInputField("Date (YYYY-MM-DD)", time.Now().Format("2006-01-02"), 20, nil, nil).
 		AddButton("Save", func() {
@@ -171,6 +172,10 @@ func AddInteractive() {
 			category := form.GetFormItemByLabel("Category").(*tview.InputField).GetText()
 			desc := form.GetFormItemByLabel("Description").(*tview.InputField).GetText()
 			dateText := form.GetFormItemByLabel("Date (YYYY-MM-DD)").(*tview.InputField).GetText()
+
+			if strings.TrimSpace(category) == "" {
+				category = parser.InferCategory(desc)
+			}
 
 			amount, err := strconv.ParseFloat(amountText, 64)
 			if err != nil {
@@ -217,6 +222,10 @@ func UpdateInteractive(tx db.Transaction) {
 			category := form.GetFormItemByLabel("Category").(*tview.InputField).GetText()
 			desc := form.GetFormItemByLabel("Description").(*tview.InputField).GetText()
 			dateText := form.GetFormItemByLabel("Date (YYYY-MM-DD)").(*tview.InputField).GetText()
+
+			if strings.TrimSpace(category) == "" {
+				category = parser.InferCategory(desc)
+			}
 
 			amount, err := strconv.ParseFloat(amountText, 64)
 			if err != nil {

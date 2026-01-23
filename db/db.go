@@ -15,6 +15,7 @@ func InitDB() error {
 	if database != nil {
 		return nil
 	}
+
 	database, err = sql.Open("sqlite3", "./finance.db")
 	if err != nil {
 		return err
@@ -29,8 +30,13 @@ func InitDB() error {
 		amount REAL NOT NULL,
 		description TEXT,
 		category TEXT,
-		date TEXT NOT NULL
+		date TEXT NOT NULL,
+		external_id TEXT
 	);
+
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_external_id
+	ON transactions(external_id)
+	WHERE external_id IS NOT NULL;
 
 	CREATE TABLE IF NOT EXISTS categories (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,18 +62,46 @@ type Transaction struct {
 	Description string
 	Category    string
 	Date        time.Time
+	ExternalID  string
 }
 
 func InsertTransaction(tx Transaction) error {
 	_, err := database.Exec(
-		`INSERT INTO transactions (amount, description, category, date) VALUES (?, ?, ?, ?)`,
-		tx.Amount, tx.Description, tx.Category, tx.Date.Format("2006-01-02"),
+		`INSERT INTO transactions 
+		 (amount, description, category, date, external_id)
+		 VALUES (?, ?, ?, ?, ?)`,
+		tx.Amount,
+		tx.Description,
+		tx.Category,
+		tx.Date.Format("2006-01-02"),
+		nullIfEmpty(tx.ExternalID),
 	)
 	return err
 }
 
+func TransactionExistsByExternalID(externalID string) (bool, error) {
+	if externalID == "" {
+		return false, nil
+	}
+
+	var count int
+	err := database.QueryRow(
+		`SELECT COUNT(1) FROM transactions WHERE external_id = ?`,
+		externalID,
+	).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func GetTransactions() ([]Transaction, error) {
-	rows, err := database.Query(`SELECT id, amount, description, category, date FROM transactions ORDER BY date DESC`)
+	rows, err := database.Query(`
+		SELECT id, amount, description, category, date, external_id
+		FROM transactions
+		ORDER BY date DESC
+	`)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +111,28 @@ func GetTransactions() ([]Transaction, error) {
 	for rows.Next() {
 		var t Transaction
 		var dateStr string
-		if err := rows.Scan(&t.ID, &t.Amount, &t.Description, &t.Category, &dateStr); err != nil {
+		var extID sql.NullString
+
+		if err := rows.Scan(
+			&t.ID,
+			&t.Amount,
+			&t.Description,
+			&t.Category,
+			&dateStr,
+			&extID,
+		); err != nil {
 			return nil, err
 		}
+
 		t.Date, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
 			t.Date = time.Time{}
 		}
+
+		if extID.Valid {
+			t.ExternalID = extID.String
+		}
+
 		txs = append(txs, t)
 	}
 	return txs, nil
@@ -91,8 +140,15 @@ func GetTransactions() ([]Transaction, error) {
 
 func UpdateTransaction(t Transaction) error {
 	_, err := database.Exec(
-		`UPDATE transactions SET amount = ?, description = ?, category = ?, date = ? WHERE id = ?`,
-		t.Amount, t.Description, t.Category, t.Date.Format("2006-01-02"), t.ID,
+		`UPDATE transactions
+		 SET amount = ?, description = ?, category = ?, date = ?, external_id = ?
+		 WHERE id = ?`,
+		t.Amount,
+		t.Description,
+		t.Category,
+		t.Date.Format("2006-01-02"),
+		nullIfEmpty(t.ExternalID),
+		t.ID,
 	)
 	return err
 }
@@ -103,11 +159,25 @@ func DeleteTransaction(id int) error {
 }
 
 func GetTransactionByID(id int) (*Transaction, error) {
-	row := database.QueryRow(`SELECT id, amount, description, category, date FROM transactions WHERE id = ?`, id)
+	row := database.QueryRow(`
+		SELECT id, amount, description, category, date, external_id
+		FROM transactions
+		WHERE id = ?
+	`, id)
 
 	var t Transaction
 	var dateStr string
-	err := row.Scan(&t.ID, &t.Amount, &t.Description, &t.Category, &dateStr)
+	var extID sql.NullString
+
+	err := row.Scan(
+		&t.ID,
+		&t.Amount,
+		&t.Description,
+		&t.Category,
+		&dateStr,
+		&extID,
+	)
+
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -119,10 +189,13 @@ func GetTransactionByID(id int) (*Transaction, error) {
 	if err != nil {
 		t.Date = time.Time{}
 	}
+
+	if extID.Valid {
+		t.ExternalID = extID.String
+	}
+
 	return &t, nil
 }
-
-// -------------------- Budgets --------------------
 
 type Budget struct {
 	ID       int
@@ -133,14 +206,21 @@ type Budget struct {
 
 func InsertBudget(b Budget) error {
 	_, err := database.Exec(
-		`INSERT INTO budgets (category, amount, period) VALUES (?, ?, ?)`,
-		b.Category, b.Amount, b.Period,
+		`INSERT INTO budgets (category, amount, period)
+		 VALUES (?, ?, ?)`,
+		b.Category,
+		b.Amount,
+		b.Period,
 	)
 	return err
 }
 
 func GetBudgets() ([]Budget, error) {
-	rows, err := database.Query(`SELECT id, category, amount, period FROM budgets ORDER BY period DESC`)
+	rows, err := database.Query(`
+		SELECT id, category, amount, period
+		FROM budgets
+		ORDER BY period DESC
+	`)
 	if err != nil {
 		return nil, err
 	}
@@ -158,10 +238,15 @@ func GetBudgets() ([]Budget, error) {
 }
 
 func GetBudgetByID(id int) (*Budget, error) {
-	row := database.QueryRow(`SELECT id, category, amount, period FROM budgets WHERE id = ?`, id)
+	row := database.QueryRow(`
+		SELECT id, category, amount, period
+		FROM budgets
+		WHERE id = ?
+	`, id)
 
 	var b Budget
 	err := row.Scan(&b.ID, &b.Category, &b.Amount, &b.Period)
+
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -173,8 +258,13 @@ func GetBudgetByID(id int) (*Budget, error) {
 
 func UpdateBudget(b Budget) error {
 	_, err := database.Exec(
-		`UPDATE budgets SET category = ?, amount = ?, period = ? WHERE id = ?`,
-		b.Category, b.Amount, b.Period, b.ID,
+		`UPDATE budgets
+		 SET category = ?, amount = ?, period = ?
+		 WHERE id = ?`,
+		b.Category,
+		b.Amount,
+		b.Period,
+		b.ID,
 	)
 	return err
 }
@@ -195,16 +285,27 @@ func GetBudgetRemaining(b Budget) (float64, error) {
 	}
 
 	query := `
-	SELECT COALESCE(SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END), 0) 
-	FROM transactions 
-	WHERE category = ? AND strftime('%Y-%m', date) = ?
+	SELECT COALESCE(
+		SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END),
+		0
+	)
+	FROM transactions
+	WHERE category = ?
+	AND strftime('%Y-%m', date) = ?
 	`
+
 	var expenses float64
 	err := database.QueryRow(query, b.Category, period).Scan(&expenses)
 	if err != nil {
 		return 0, err
 	}
 
-	remaining := b.Amount - expenses
-	return remaining, nil
+	return b.Amount - expenses, nil
+}
+
+func nullIfEmpty(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
 }
