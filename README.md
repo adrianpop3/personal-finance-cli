@@ -26,12 +26,17 @@ and updating the corresponding budgets.
   - **Update Transaction/Budgets**
   - **Delete Transaction/Budgets**
   - **List Transactions/Budgets** (All or by ID)
-  - **Import Transactions From File (.csv)**
+  - **Import Transactions From File (both .csv & .ofx fromats)**
 - Interactive TUI:
   - Arrow navigation
   - Green-themed buttons
   - Edit/Delete modal for each transaction
   - Add/Update forms fully functional
+
+### 2. Automatic Categorization
+- Imported transactions (CSV / OFX) are automatically categorized based on keywords found in their description.
+- Manual transactions added via CLI or TUI are auto-categorized only if the category field is left empty.
+- Categorization is rule-based (regex matching) and defaults to `Uncategorized` when no rule applies.
 
 ### 3. Terminal UI
 - Main menu with:
