@@ -48,6 +48,12 @@ and updating the corresponding budgets.
 - Forms for adding/editing items with proper validation
 - Modals for edit/delete confirmation
 
+### 4. Search & Filter Transactions
+- Quickly search and filter transactions by keywords in the description or by category.
+- Filter results directly from the CLI using flags.
+- Combine filters to narrow down your transactions for review or reporting.
+
+
 ---
 
 ## Installation
@@ -88,6 +94,11 @@ go build -o fincli main.go
 - transaction list
 - transaction list --id 1
 
+- transaction list --category Food
+- transaction list --desc coffee
+- transaction list --from 2026-01-01 --to 2026-01-24 --min 5 --max 50
+- transaction list --category Coffee --desc Starbucks --min 2
+
 - budget add --category Food --amount 200 --period monthly
 - budget update --id 1 --amount 250
 - budget delete --id 1
@@ -112,6 +123,6 @@ go build -o fincli main.go
 
 <img width="1071" height="251" alt="Captură de ecran din 2025-11-16 la 21 39 41" src="https://github.com/user-attachments/assets/176c3f47-48bf-4a64-b682-09ac7f61d45e" />
 
+<img width="1057" height="311" alt="Captură de ecran din 2026-01-24 la 00 12 46" src="https://github.com/user-attachments/assets/72a51ddf-5619-4d35-a6a6-2c5f064913e5" />
+
 <img width="1071" height="251" alt="Captură de ecran din 2025-11-16 la 21 39 49" src="https://github.com/user-attachments/assets/0ac38364-c8df-4613-8bb3-057666dae7d5" />
-
-
