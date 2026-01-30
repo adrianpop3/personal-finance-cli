@@ -193,6 +193,21 @@ The application can also be fully used through an interactive TUI by simply runn
 
 Screenshots showcasing these views can be found below.
 
+<img width="1332" height="313" alt="Captură de ecran din 2026-01-31 la 00 34 48" src="https://github.com/user-attachments/assets/59ab7bbd-7b46-4efb-bb8f-fe13eb284363" />
+<img width="1339" height="362" alt="Captură de ecran din 2026-01-31 la 00 37 45" src="https://github.com/user-attachments/assets/beae25fc-9b6d-4f1b-aa55-a62e8f04f225" />
+<img width="1339" height="569" alt="Captură de ecran din 2026-01-31 la 00 38 00" src="https://github.com/user-attachments/assets/83fe06cd-6a28-4ea9-80b4-e163d7fb20a4" />
+<img width="1332" height="569" alt="Captură de ecran din 2026-01-31 la 00 40 34" src="https://github.com/user-attachments/assets/89c1ba0e-dc99-42b5-b57f-5a2bbb45e5f4" />
+<img width="1332" height="569" alt="Captură de ecran din 2026-01-31 la 00 41 06" src="https://github.com/user-attachments/assets/7b830e60-4dda-4242-a153-21902c2098a1" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 49 00" src="https://github.com/user-attachments/assets/96b95129-de58-476b-8d84-70805612ff18" />
+<img width="1332" height="309" alt="Captură de ecran din 2026-01-31 la 00 41 24" src="https://github.com/user-attachments/assets/78ad2498-145a-4d19-b641-8081b20a5cae" />
+<img width="1332" height="569" alt="Captură de ecran din 2026-01-31 la 00 42 10" src="https://github.com/user-attachments/assets/d051aaaf-aaff-4f94-b4f8-c7fc658ad0f1" />
+<img width="1332" height="569" alt="Captură de ecran din 2026-01-31 la 00 42 20" src="https://github.com/user-attachments/assets/7ceb3ffe-2fc1-40ee-a55f-b0749f7642ab" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 42 41" src="https://github.com/user-attachments/assets/987efc62-8e5b-472c-bdaf-ea8f0ff5f282" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 42 51" src="https://github.com/user-attachments/assets/70336705-7ade-4f2e-bf6e-1399fa6588ab" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 03" src="https://github.com/user-attachments/assets/da08113d-fbb6-4788-a99a-38fb313bb7e3" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 12" src="https://github.com/user-attachments/assets/038aa0c8-b81e-41e8-99e7-6c7eb8b7a8bc" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 22" src="https://github.com/user-attachments/assets/c513f9a1-7a5d-414a-af29-7fde51fb1933" />
+
 ---
 
 ## License
