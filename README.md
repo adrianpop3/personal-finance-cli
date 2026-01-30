@@ -204,9 +204,9 @@ Screenshots showcasing these views can be found below.
 <img width="1332" height="569" alt="Captură de ecran din 2026-01-31 la 00 42 10" src="https://github.com/user-attachments/assets/d051aaaf-aaff-4f94-b4f8-c7fc658ad0f1" />
 <img width="1332" height="569" alt="Captură de ecran din 2026-01-31 la 00 42 20" src="https://github.com/user-attachments/assets/7ceb3ffe-2fc1-40ee-a55f-b0749f7642ab" />
 <img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 42 41" src="https://github.com/user-attachments/assets/987efc62-8e5b-472c-bdaf-ea8f0ff5f282" />
+<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 12" src="https://github.com/user-attachments/assets/038aa0c8-b81e-41e8-99e7-6c7eb8b7a8bc" />
 <img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 42 51" src="https://github.com/user-attachments/assets/70336705-7ade-4f2e-bf6e-1399fa6588ab" />
 <img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 22" src="https://github.com/user-attachments/assets/c513f9a1-7a5d-414a-af29-7fde51fb1933" />
-<img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 12" src="https://github.com/user-attachments/assets/038aa0c8-b81e-41e8-99e7-6c7eb8b7a8bc" />
 <img width="1332" height="254" alt="Captură de ecran din 2026-01-31 la 00 43 03" src="https://github.com/user-attachments/assets/da08113d-fbb6-4788-a99a-38fb313bb7e3" />
 
 ---
