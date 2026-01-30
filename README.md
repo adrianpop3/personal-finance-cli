@@ -1,20 +1,18 @@
 # Personal Finance CLI Manager
 
-A **command-line personal finance manager** a for tracking personal income and expenses. Import transactions from
-bank statements, categorize them automatically, set budgets, and generate insightful reports in a simple manner.
-At the moment the functionalities available in this project are CRUD operations for transactions and budgets.
-These operations can be made straight from the terminal using the defined commands or using the TUI views that were added for better user exerience.
-The feature of importing from a file is partially available for transactions in a .csv format. The next step, which is currently in progress, is automatically categorizing the transactions
-and updating the corresponding budgets.
+A **command-line personal finance manager** for tracking personal income and expenses.  
+The application allows you to import transactions from bank statements, categorize them automatically, set budgets, receive alerts when budgets are exceeded, and generate insightful reports — all directly from the terminal.
+
+This project was developed as a **faculty assignment**, with a focus on clarity, correctness, and usability in a constrained CLI/TUI environment.
 
 ---
 
 ## Technologies Used
 
-- **Go (Golang)** – Core language for building the CLI.
-- **SQLite** – Lightweight local database for storing transactions, budgets, and categories.
-- **Cobra** – CLI framework for building commands and subcommands (`add`, `update`, `delete`, `list`, etc.).
-- **tview & tcell** – Libraries used to build an interactive, arrow-navigable Terminal UI (TUI).
+- **Go (Golang)** – Core language for building the CLI application
+- **SQLite** – Lightweight local database for storing transactions, budgets, and categories
+- **Cobra** – CLI framework for commands and subcommands (`add`, `update`, `delete`, `list`, `import`, `report`, etc.)
+- **tview & tcell** – Libraries used to build an interactive, arrow-navigable Terminal UI (TUI)
 
 ---
 
@@ -22,37 +20,78 @@ and updating the corresponding budgets.
 
 ### 1. Transactions & Budgets
 - Full CRUD operations:
-  - **Add Transaction/Budgets**
-  - **Update Transaction/Budgets**
-  - **Delete Transaction/Budgets**
-  - **List Transactions/Budgets** (All or by ID)
-  - **Import Transactions From File (both .csv & .ofx fromats)**
-- Interactive TUI:
-  - Arrow navigation
-  - Green-themed buttons
-  - Edit/Delete modal for each transaction
-  - Add/Update forms fully functional
+  - **Add Transactions / Budgets**
+  - **Update Transactions / Budgets**
+  - **Delete Transactions / Budgets**
+  - **List Transactions / Budgets** (all or by ID)
+- Import transactions from files:
+  - **CSV**
+  - **OFX**
+- Data stored locally using SQLite
+- Operations available through:
+  - CLI commands (Cobra)
+  - Interactive TUI views
+
+---
 
 ### 2. Automatic Categorization
-- Imported transactions (CSV / OFX) are automatically categorized based on keywords found in their description.
-- Manual transactions added via CLI or TUI are auto-categorized only if the category field is left empty.
-- Categorization is rule-based (regex matching) and defaults to `Uncategorized` when no rule applies.
+- Imported transactions (CSV / OFX) are automatically categorized using **regex-based rules** applied to transaction descriptions.
+- Manual transactions added via CLI or TUI are automatically categorized **when the category field is left empty**.
+- If no rule matches, the category defaults to `Uncategorized`.
 
-### 3. Terminal UI
+---
+
+### 3. Budget Tracking & Alerts
+- Budgets can be set **per category**, typically on a monthly basis.
+- Budget tracking automatically accounts for expenses in the selected period.
+- **Alerts are generated when:**
+  - A budget is exceeded
+  - A budget is close to its limit (≤10% remaining)
+- Alerts are shown:
+  - Automatically after adding, updating, or importing transactions (CLI)
+  - Via a dedicated **Budget Status / Alerts** view in the TUI
+
+---
+
+### 4. Search & Filter Transactions
+- Transactions can be filtered using CLI flags:
+  - By category
+  - By description keywords
+  - By date range
+  - By minimum / maximum amount
+- Multiple filters can be combined to narrow down results.
+
+---
+
+### 5. Reports & Insights
+- Reports are generated directly in the terminal:
+  - **Monthly totals** (income, expenses, net balance)
+  - **Category breakdown** with ASCII bar charts
+- Reports are available via:
+  - CLI commands
+  - Dedicated TUI views
+- ASCII bar charts are used to visualize spending distribution per category.
+
+---
+
+### 6. Terminal User Interface (TUI)
+- Interactive, arrow&mouse-navigable interface
 - Main menu with:
   - Transactions
   - Budgets
+  - Reports
   - Exit
-- Arrow navigation for all menus
-- Green-colored styling throughout (buttons, headers, modals)
-- Forms for adding/editing items with proper validation
-- Modals for edit/delete confirmation
-
-### 4. Search & Filter Transactions
-- Quickly search and filter transactions by keywords in the description or by category.
-- Filter results directly from the CLI using flags.
-- Combine filters to narrow down your transactions for review or reporting.
-
+- Blue-Green-themed styling throughout:
+  - Buttons
+  - Headers
+  - Tables
+  - Modals
+- Features include:
+  - Editable tables
+  - Add / update forms with validation
+  - Confirmation modals
+  - Budget status and alert tables
+  - Report views with charts
 
 ---
 
@@ -71,58 +110,91 @@ cd personal-finance-cli
 go mod tidy
 ```
 
-3. Run the CLI:
+3. Run the application:
 
 ```bash
 go run main.go
 ```
 
-Or, make an executable by running these two commands after previous point 2. :
+Or build an executable:
 
 ```bash
 go build -o fincli main.go
 ./fincli
 ```
 
+---
+
 ## Usage
 
-# Example of CLI Commands (via Cobra)
+### CLI Examples (Cobra)
 
-- transaction add --amount 50 --category Food --description "Groceries"
-- transaction update --id 1 --amount 60
-- transaction delete --id 1
-- transaction list
-- transaction list --id 1
+#### Transactions
+```bash
+transaction add --amount -50 --description "Groceries Lidl"
+transaction update --id 1 --amount -60
+transaction delete --id 1
+transaction list
+transaction list --id 1
+```
 
-- transaction list --category Food
-- transaction list --desc coffee
-- transaction list --from 2026-01-01 --to 2026-01-24 --min 5 --max 50
-- transaction list --category Coffee --desc Starbucks --min 2
+#### Filtering Transactions
+```bash
+transaction list --category Food
+transaction list --desc coffee
+transaction list --from 2026-01-01 --to 2026-01-31 --min -100 --max -5
+transaction list --category Coffee --desc Starbucks
+```
 
-- budget add --category Food --amount 200 --period monthly
-- budget update --id 1 --amount 250
-- budget delete --id 1
-- budget list
-- budget list --id 1
+#### Import Transactions
+```bash
+transaction import --file path/to/file.csv
+transaction import --file path/to/file.ofx
+```
 
-# Example of TUI views
+---
 
-<img width="1071" height="210" alt="Captură de ecran din 2025-11-16 la 20 47 11" src="https://github.com/user-attachments/assets/52f7eab3-5c17-47c5-9647-9487e345c9cd" />
+#### Budgets
+```bash
+budget add --category Food --amount 300 --period monthly
+budget update --id 1 --amount 350
+budget delete --id 1
+budget list
+budget list --id 1
+budget status
+```
 
-<img width="1071" height="251" alt="Captură de ecran din 2025-11-16 la 21 38 50" src="https://github.com/user-attachments/assets/141e1b56-8493-4f08-9dc8-b6ddbf6a94a5" />
+---
 
-<img width="1071" height="210" alt="Captură de ecran din 2025-11-16 la 20 54 38" src="https://github.com/user-attachments/assets/908c799e-f967-49b8-8a8d-36e1b4859ac9" />
+#### Reports
+```bash
+report monthly --month 2026-01
+report categories --month 2026-01
+```
 
-<img width="1071" height="210" alt="Captură de ecran din 2025-11-16 la 20 47 37" src="https://github.com/user-attachments/assets/3e240f6d-175e-4464-b8dd-b3e679315828" />
+---
 
-<img width="1071" height="210" alt="Captură de ecran din 2025-11-16 la 20 48 02" src="https://github.com/user-attachments/assets/6d38eff9-96eb-4598-8243-39832a6932ea" />
+## Terminal UI (TUI)
 
-<img width="1071" height="210" alt="Captură de ecran din 2025-11-16 la 20 57 01" src="https://github.com/user-attachments/assets/8d66473c-5673-4220-9842-78fe2be1eea3" />
+The application can also be fully used through an interactive TUI by simply running:
 
-<img width="1071" height="210" alt="Captură de ecran din 2025-11-16 la 20 48 26" src="https://github.com/user-attachments/assets/847e819c-b4b7-4e80-9140-f645b1a30324" />
+```bash
+./fincli
+```
 
-<img width="1071" height="251" alt="Captură de ecran din 2025-11-16 la 21 39 41" src="https://github.com/user-attachments/assets/176c3f47-48bf-4a64-b682-09ac7f61d45e" />
+### Example Screens
 
-<img width="1057" height="311" alt="Captură de ecran din 2026-01-24 la 00 12 46" src="https://github.com/user-attachments/assets/72a51ddf-5619-4d35-a6a6-2c5f064913e5" />
+- Main menu (Transactions / Budgets / Reports)
+- Transactions table with edit/delete modal
+- Add / update transaction forms
+- Search & filter transactions
+- Budgets table and budget status alerts
+- Monthly and category-based reports with ASCII charts
 
-<img width="1071" height="251" alt="Captură de ecran din 2025-11-16 la 21 39 49" src="https://github.com/user-attachments/assets/0ac38364-c8df-4613-8bb3-057666dae7d5" />
+Screenshots showcasing these views can be found below.
+
+---
+
+## License
+
+This project is intended for educational purposes.
