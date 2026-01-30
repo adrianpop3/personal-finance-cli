@@ -1,34 +1,30 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
+
+	"personal-finance-cli/cmd/budget"
+	"personal-finance-cli/cmd/report"
 	"personal-finance-cli/cmd/transaction"
-	"personal-finance-cli/db"
 
 	"github.com/spf13/cobra"
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "personal-finance-cli",
-	Short: "Personal finance manager CLI",
+	Use:   "fincli",
+	Short: "Personal Finance CLI Manager",
+	Long:  "Track transactions, import statements, set budgets, and generate reports.",
 }
 
 func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	_ = RootCmd.Execute()
 }
 
 func init() {
-	cobra.OnInitialize(initDatabase)
+	RootCmd.SetOut(os.Stdout)
+	RootCmd.SetErr(os.Stderr)
 
 	RootCmd.AddCommand(transaction.TransactionCmd)
-}
-
-func initDatabase() {
-	if err := db.InitDB(); err != nil {
-		panic(err)
-	}
+	RootCmd.AddCommand(budget.BudgetCmd)
+	RootCmd.AddCommand(report.ReportCmd)
 }

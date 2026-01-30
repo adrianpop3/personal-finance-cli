@@ -2,56 +2,81 @@ package transaction
 
 import (
 	"fmt"
-	"personal-finance-cli/db"
+	"strings"
 	"time"
+
+	"personal-finance-cli/db"
+	"personal-finance-cli/internal/parser"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	updateID          int
-	updateAmount      float64
-	updateDescription string
-	updateCategory    string
-	updateDate        string
+	updID          int
+	updAmount      float64
+	updDescription string
+	updCategory    string
+	updDate        string
 )
 
 var UpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update a transaction by ID",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		txDate := time.Now()
-		var err error
-		if updateDate != "" {
-			txDate, err = time.Parse("2006-01-02", updateDate)
-			if err != nil {
-				return fmt.Errorf("invalid date format: %w", err)
-			}
+		if updID <= 0 {
+			return fmt.Errorf("--id is required")
 		}
 
-		tx := db.Transaction{
-			ID:          updateID,
-			Amount:      updateAmount,
-			Description: updateDescription,
-			Category:    updateCategory,
-			Date:        txDate,
-		}
-
-		if err := db.UpdateTransaction(tx); err != nil {
+		existing, err := db.GetTransactionByID(updID)
+		if err != nil {
 			return err
 		}
+		if existing == nil {
+			fmt.Printf("Transaction with ID %d not found.\n", updID)
+			return nil
+		}
+
+		t := *existing
+
+		if cmd.Flags().Changed("amount") {
+			t.Amount = updAmount
+		}
+		if cmd.Flags().Changed("description") {
+			t.Description = updDescription
+		}
+		if cmd.Flags().Changed("category") {
+			t.Category = updCategory
+		}
+		if cmd.Flags().Changed("date") {
+			d, err := time.Parse("2006-01-02", updDate)
+			if err != nil {
+				return fmt.Errorf("invalid --date (expected YYYY-MM-DD)")
+			}
+			t.Date = d
+		}
+
+		if strings.TrimSpace(t.Category) == "" {
+			t.Category = parser.InferCategory(t.Description)
+		}
+
+		if err := db.UpdateTransaction(t); err != nil {
+			return err
+		}
+
 		fmt.Println("Transaction updated.")
+
+		printBudgetAlertsForCategory(t.Category)
+
 		return nil
 	},
 }
 
 func init() {
-	UpdateCmd.Flags().IntVarP(&updateID, "id", "i", 0, "ID of transaction to update (required)")
-	UpdateCmd.Flags().Float64VarP(&updateAmount, "amount", "a", 0, "New amount")
-	UpdateCmd.Flags().StringVarP(&updateDescription, "description", "d", "", "New description")
-	UpdateCmd.Flags().StringVarP(&updateCategory, "category", "c", "", "New category")
-	UpdateCmd.Flags().StringVarP(&updateDate, "date", "", "", "New date YYYY-MM-DD")
-	_ = UpdateCmd.MarkFlagRequired("id")
+	UpdateCmd.Flags().IntVarP(&updID, "id", "i", 0, "Transaction ID (required)")
+	UpdateCmd.Flags().Float64VarP(&updAmount, "amount", "a", 0, "New amount")
+	UpdateCmd.Flags().StringVarP(&updDescription, "description", "d", "", "New description")
+	UpdateCmd.Flags().StringVarP(&updCategory, "category", "c", "", "New category (can be empty to infer)")
+	UpdateCmd.Flags().StringVar(&updDate, "date", "", "New date YYYY-MM-DD")
 
-	TransactionCmd.AddCommand(UpdateCmd)
+	_ = UpdateCmd.MarkFlagRequired("id")
 }

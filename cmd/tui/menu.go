@@ -2,6 +2,7 @@ package tui
 
 import (
 	"personal-finance-cli/cmd/tui/budget"
+	"personal-finance-cli/cmd/tui/report"
 	"personal-finance-cli/cmd/tui/transaction"
 
 	"github.com/gdamore/tcell/v2"
@@ -16,10 +17,11 @@ func RunMainMenu() error {
 		SetText("[::b][green]💰 Personal Finance CLI[::-]").
 		SetDynamicColors(true)
 
-	labels := []string{"Transactions", "Budgets", "Exit"}
+	labels := []string{"Transactions", "Budgets", "Reports", "Exit"}
 	actions := []func(){
 		func() { app.Suspend(func() { transaction.RunTUI() }) },
 		func() { app.Suspend(func() { budget.RunTUI() }) },
+		func() { app.Suspend(func() { report.RunTUI() }) },
 		func() { app.Stop() },
 	}
 
@@ -45,7 +47,6 @@ func RunMainMenu() error {
 			}
 		}
 	}
-
 	highlight()
 
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).

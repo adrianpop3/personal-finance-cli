@@ -2,9 +2,11 @@ package transaction
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"personal-finance-cli/db"
+	"personal-finance-cli/internal/parser"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +18,6 @@ var (
 	addDate        string
 )
 
-// AddCmd represents the "transaction add" command
 var AddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new transaction",
@@ -32,10 +33,15 @@ var AddCmd = &cobra.Command{
 			}
 		}
 
+		cat := strings.TrimSpace(addCategory)
+		if cat == "" {
+			cat = parser.InferCategory(addDescription)
+		}
+
 		tx := db.Transaction{
 			Amount:      addAmount,
 			Description: addDescription,
-			Category:    addCategory,
+			Category:    cat,
 			Date:        txDate,
 		}
 
@@ -44,17 +50,18 @@ var AddCmd = &cobra.Command{
 		}
 
 		fmt.Println("Transaction added.")
+
+		printBudgetAlertsForCategory(cat)
+
 		return nil
 	},
 }
 
 func init() {
-	AddCmd.Flags().Float64VarP(&addAmount, "amount", "a", 0, "Amount of transaction (required)")
+	AddCmd.Flags().Float64VarP(&addAmount, "amount", "a", 0, "Amount of transaction (required). Use negative for expenses.")
 	AddCmd.Flags().StringVarP(&addDescription, "description", "d", "", "Description")
-	AddCmd.Flags().StringVarP(&addCategory, "category", "c", "Uncategorized", "Category")
+	AddCmd.Flags().StringVarP(&addCategory, "category", "c", "", "Category (optional; inferred if empty)")
 	AddCmd.Flags().StringVarP(&addDate, "date", "", "", "Date YYYY-MM-DD (optional; defaults to today)")
 
 	_ = AddCmd.MarkFlagRequired("amount")
-
-	TransactionCmd.AddCommand(AddCmd)
 }

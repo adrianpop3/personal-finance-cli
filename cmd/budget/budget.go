@@ -1,8 +1,6 @@
 package budget
 
-import (
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 var BudgetCmd = &cobra.Command{
 	Use:   "budget",
@@ -10,5 +8,9 @@ var BudgetCmd = &cobra.Command{
 }
 
 func init() {
-	// child commands will attach here (add, update, delete, list)
+	BudgetCmd.AddCommand(AddCmd)
+	BudgetCmd.AddCommand(ListCmd)
+	BudgetCmd.AddCommand(UpdateCmd)
+	BudgetCmd.AddCommand(DeleteCmd)
+	BudgetCmd.AddCommand(StatusCmd)
 }
